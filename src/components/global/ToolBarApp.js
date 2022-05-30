@@ -6,7 +6,7 @@ import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import Badge from "@material-ui/core/Badge";
 import NotificationsIcon from "@material-ui/icons/Notifications";
-import afip from "./img/afip.png";
+import logo from "./img/dive_logo.svg";
 
 const useStyles = makeStyles(theme => ({
   bigAvatar: {
@@ -59,7 +59,7 @@ export default function ToolBarApp() {
         className={classes.appBar}
       >
         <Toolbar>
-          <img src={afip} className={classes.bigAvatar} alt="" />
+          <img src={logo} className={classes.bigAvatar} alt="" />
           <IconButton
             edge="start"
             className={classes.menuButton}
