@@ -1,6 +1,6 @@
 import React, {useEffect}  from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {Form, Image, Item, Message} from 'semantic-ui-react'
+import {Form, Image, Item} from 'semantic-ui-react'
 import * as actions from '../../store/actions';
 import axios from '../../axios-catalogo';
 import Aux from '../global/aux/Aux';
@@ -8,9 +8,7 @@ import {addActor} from "../../store/actions";
 import Modal from "../global/modal/Modal";
 
 export default function FormMovieControl() {
-    const storeCatalogo = useSelector(store => store);
     const dispatch = useDispatch()
-    const errorLabel = "Campo requerido";
     const [state, setState] = React.useState({
         columns: [
             { title: "Title", field: "title", editable: "never" },
@@ -20,12 +18,12 @@ export default function FormMovieControl() {
         columnsSelected: [],
         actors: [],
         data: [],
-        actorsSelected: [],
+        actorsList: [],
+        actorsSelectedWithKeys: [],
         isNew: false,
     });
     const tabStyle = {};
     tabStyle.paddingLeft = `-24px;`;
-    const paragraph = <Image src='/images/wireframe/short-paragraph.png' />
 
     const fetchActors = () => {
         axios.get( '/actors')
@@ -93,29 +91,37 @@ export default function FormMovieControl() {
         { key: 'm', text: 'Male', value: 'm' },
         { key: 'f', text: 'Female', value: 'f' },
     ]
-    let actor =  {"key": 1, "data": "data"};
+    let actor =  [];
+    let actorWithKeys = {};
     const setActor = (event, {value}) => {
+        actor =  [];
         let data = event.target.textContent;
-        actor = {"key": value, "data": data};
+        actorWithKeys = {"key": value, "data": data}
+        actor.push(data);
     }
 
     const addActor = () => {
-        let stateNew = state
-        stateNew.actorsSelected.push(actor)
-        setState(stateNew);
-        actor = {};
-        renderActor();
-    }
-
-    let actors = [];
-    const renderActor = () => {
-        state.actorsSelected.forEach(function(data, idx, array){
-            actors.push(data.data);
+        let actors = state.actorsList;
+        let act2 = state.actorsSelectedWithKeys;
+        actors.push(actor);
+        act2.push(actorWithKeys);
+        setState({
+            ...state,
+            actorsSelected: actors,
+            actorsSelectedWithKeys: act2
         });
-
-        return <Message compact header='Actors'  list={actors}/>;
+        actor = [];
     }
-    useEffect(renderActor, actors);
+
+    const displayListActors = () =>
+        state.actorsList.map((el, i) => (
+            <Item key={`${el}-${state.actorsList[i]}`}>
+                <Item.Content verticalAlign>
+                    {state.actorsList[i]}
+                </Item.Content>
+            </Item>
+    ));
+    useEffect(fetchActors, state.actorsList);
 
     return (
         <Aux>
@@ -130,13 +136,13 @@ export default function FormMovieControl() {
                         placeholder='Actors'
                         onChange={setActor}
                     />
-
+                    <Form.Button onClick={addActor}>Add Actor</Form.Button>
                 </Form.Group>
-                <Form.Button onClick={addActor}>Submit</Form.Button>
+
             </Form>
-            <Modal show={true} >
-                {renderActor()}
-            </Modal>
+            <Item.Group divided>
+                {displayListActors()}
+            </Item.Group>
         </Aux>
     );
 }

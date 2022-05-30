@@ -8,13 +8,13 @@ import Aux from '../global/aux/Aux';
 import Modal from '../global/modal/Modal';
 
 export default function FormMoviesControl() {
-    const storeCatalogo = useSelector(store => store);
     const dispatch = useDispatch();
     const [state, setState] = React.useState({
         columns: [
-            { title: "Title", field: "title", editable: "never" },
+            { title: "Id", field: "id", editable: "never" },
+            { title: "Title", field: "title" },
             { title: "Category", field: "category" },
-            { title: "Cast", field: "cast" }
+            { title: "Cast", field: "cast", editable: "never" }
         ],
         columnsSelected: [],
         data: [],
@@ -87,13 +87,11 @@ export default function FormMoviesControl() {
         fetchMovies();
     };
 
-    const message = <Message compact
-                             header='Changes in Service'
-                             content='We updated our privacy policy here to better service our customers. We recommend reviewing the changes.'
+    const message = <Message compact header='' content=''
     />
     return (
         <Aux>
-            <Modal show={true} >
+            <Modal show={false} >
                 {message}
             </Modal>
             <Form className='attached fluid segment'>

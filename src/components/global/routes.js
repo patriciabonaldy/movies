@@ -18,9 +18,9 @@ const NoMatchPage = () => {
 const AppRoutes = () =>
     <Switch>
         <Route path="/" exact component={Home} />
-        <Route path="/actor" component={Actor} />
-        <Route path="/movie" component={Movie} />
-        <Route path="/movies" component={Movies} />
+        <Route path="/actor" exact component={Actor} />
+        <Route path="/movie" exact component={Movie} />
+        <Route path="/movies" exact component={Movies} />
         <Route component={NoMatchPage} />
     </Switch>
 
