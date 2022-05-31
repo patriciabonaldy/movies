@@ -1,39 +1,39 @@
 import React, {useEffect}  from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {Form, Image, Item} from 'semantic-ui-react'
+import { useDispatch } from "react-redux";
+import {Button, Divider, Form, Image, Item, List} from 'semantic-ui-react'
 import * as actions from '../../store/actions';
 import axios from '../../axios-catalogo';
 import Aux from '../global/aux/Aux';
-import {addActor} from "../../store/actions";
-import Modal from "../global/modal/Modal";
 
 export default function FormMovieControl() {
     const dispatch = useDispatch()
     const [state, setState] = React.useState({
-        columns: [
-            { title: "Title", field: "title", editable: "never" },
-            { title: "Category", field: "category" },
-            { title: "Cast", field: "cast" }
-        ],
-        columnsSelected: [],
         actors: [],
-        data: [],
+        data: {},
         actorsList: [],
-        actorsSelectedWithKeys: [],
-        isNew: false,
+        listActors: [],
+        actorsSelectedWithKeys: []
     });
     const tabStyle = {};
     tabStyle.paddingLeft = `-24px;`;
 
+
     const fetchActors = () => {
         axios.get( '/actors')
             .then( response => {
-                var stateNew = state
-                stateNew.actors = response.data
-                setState(stateNew);
-                dispatch({
-                    type: actions.STORE_MOVIES,
-                    movie: stateNew
+                let newState = state;
+                newState.actors = response.data;
+
+
+                let listActors = [];
+                newState.actors.map((el, i) => (
+                    listActors.push({ key: newState.actors[i].id,
+                        text: newState.actors[i].name,
+                        value: newState.actors[i].id })
+                ));
+                newState.listActors = listActors
+                setState({
+                    ...newState
                 });
             } )
             .catch( error => {
@@ -42,55 +42,46 @@ export default function FormMovieControl() {
     }
     useEffect(fetchActors, []);
 
-    const storageHandle = () => {
-        if(state.isNew){
-            saveHandler()
-            return
-        }
-
-        updateHandler()
-    };
-
     const saveHandler = () => {
-        state.columnsSelected.forEach(function(data, idx, array) {
-            let body = {
-                "title": data.title,
-                "category": data.category,
-                "cast": data.cast
-            };
-            axios.post( '/movies', body)
+        let body = {
+            "title": state.data.title,
+            "category": state.data.category,
+            "cast": state.data.cast,
+            "actorsSelected": state.data.actorsSelected
+        };
+        axios.post( '/movies', body)
             .catch( error => {
                 console.log(error);
             } );
-        });
         setState(state => {
-            const columnsSelected = [];
-            return { ...state, columnsSelected };
+            return { ...state, data: [], actorsSelected: [], actorsSelectedWithKeys: [] };
         });
     };
 
-    const updateHandler = () => {
-        state.columnsSelected.forEach(function(data, idx, array){
-            let body = {
-                "title": data.title,
-                "category": data.category,
-                "cast": data.cast
-            };
-            axios.patch( '/movies/'+data.id, body)
-            .catch( error => {
-                console.log(error);
-            } );
+    const setTitle= (event, {value}) => {
+        let newState = state;
+        newState.data.title = value;
+        setState({
+            ...newState
         });
-        setState(state => {
-            const columnsSelected = [];
-            return { ...state, columnsSelected };
-        });
-    };
+    }
 
-    const options = [
-        { key: 'm', text: 'Male', value: 'm' },
-        { key: 'f', text: 'Female', value: 'f' },
+    const categories = [
+        { key: 'fantasy', text: 'Fantasy', value: 'fantasy' },
+        { key: 'horror', text: 'Horror', value: 'horror' },
+        { key: 'kids', text: 'Kids', value: 'kids' },
+        { key: 'blood', text: 'Blood', value: 'blood' },
+        { key: 'action', text: 'Action', value: 'action' },
+        { key: 'comedy', text: 'Comedy', value: 'comedy' },
     ]
+    const setCategory = (event, {value}) => {
+        let newState = state;
+        newState.data.category = event.target.textContent;
+
+        setState({
+            ...newState
+        });
+    }
     let actor =  [];
     let actorWithKeys = {};
     const setActor = (event, {value}) => {
@@ -101,25 +92,35 @@ export default function FormMovieControl() {
     }
 
     const addActor = () => {
+        if (actor.length ===0){
+            return
+        }
+
         let actors = state.actorsList;
         let act2 = state.actorsSelectedWithKeys;
         actors.push(actor);
         act2.push(actorWithKeys);
+
+        let newState = state;
+        newState.data.actorsSelected = actors;
+        newState.data.cast = act2;
         setState({
-            ...state,
+            ...newState,
             actorsSelected: actors,
             actorsSelectedWithKeys: act2
         });
-        actor = [];
     }
 
     const displayListActors = () =>
         state.actorsList.map((el, i) => (
-            <Item key={`${el}-${state.actorsList[i]}`}>
-                <Item.Content verticalAlign>
+            <List.Item key={`${i}-${state.actorsList[i]}`}>
+                <Item.Content>
                     {state.actorsList[i]}
                 </Item.Content>
-            </Item>
+                <Item.Extra>
+                    <Button floated='right'>Action</Button>
+                </Item.Extra>
+            </List.Item>
     ));
     useEffect(fetchActors, state.actorsList);
 
@@ -127,22 +128,37 @@ export default function FormMovieControl() {
         <Aux>
             <Form >
                 <Form.Group widths='equal'>
-                    <Form.Input fluid label='First name' placeholder='First name' />
-                    <Form.Input fluid label='Last name' placeholder='Last name' />
+                    <Form.Input fluid label='Title' placeholder='title' onChange={setTitle}/>
                     <Form.Select
                         fluid
-                        label='Actors'
-                        options={options}
-                        placeholder='Actors'
-                        onChange={setActor}
+                        label='Category'
+                        options={categories}
+                        placeholder='category'
+                        onChange={setCategory}
                     />
-                    <Form.Button onClick={addActor}>Add Actor</Form.Button>
+                    <Form.Field>
+                        <Form.Select
+                            fluid
+                            label='Actors'
+                            options={state.listActors}
+                            placeholder='Actors'
+                            onChange={setActor}
+                        />
+                        <Form.Button
+                            color='teal'
+                            content='Add Actor'
+                            icon='add'
+                            labelPosition='left'
+                            onClick={addActor}
+                        />
+                    </Form.Field>
                 </Form.Group>
-
+                <List divided style={{ widths:200 }} size="small">
+                    {displayListActors()}
+                </List>
+                <Divider hidden />
+                <Button type='submit' color='teal' onClick={saveHandler}>Submit</Button>
             </Form>
-            <Item.Group divided>
-                {displayListActors()}
-            </Item.Group>
         </Aux>
     );
 }

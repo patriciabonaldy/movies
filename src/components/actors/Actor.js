@@ -8,7 +8,7 @@ import Aux from '../global/aux/Aux';
 
 
 export default function FormActorControl() {
-    const storeCatalogo = useSelector(store => store);
+    useSelector(store => store);
     const dispatch = useDispatch()
     const errorLabel = "Campo requerido";
     const [state, setState] = React.useState({
